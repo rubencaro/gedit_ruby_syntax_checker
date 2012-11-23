@@ -317,7 +317,7 @@ class RubySyntaxCheckerPlugin(GObject.Object, Gedit.WindowActivatable):
     def _run_ruby_syntax_check(self, document):
         errors = []
         path = document.get_location().get_path()
-        stdout, stderr = Popen(['ruby -c', path],
+        stdout, stderr = Popen(['ruby', '-c', path],
                                stdout=PIPE, stderr=PIPE).communicate()
         output = stdout if stdout else stderr
 
@@ -336,7 +336,7 @@ class RubySyntaxCheckerPlugin(GObject.Object, Gedit.WindowActivatable):
             statusbar = self.window.get_statusbar()
             statusbar_ctxtid = statusbar.get_context_id('RubySyntaxChecker')
             statusbar.push(statusbar_ctxtid,
-                           "No errors found")
+                           "No syntax errors found")
             return
 
         for line in output.splitlines():
@@ -344,16 +344,10 @@ class RubySyntaxCheckerPlugin(GObject.Object, Gedit.WindowActivatable):
             if not m:
                 continue
             groups = m.groupdict()
-            if groups['character']:
-                err = Message(self.window.get_active_document,
-                              int(groups['line']),
-                              int(groups['character'].strip(':')),
-                              groups['message'],)
-            else:
-                err = Message(self.window.get_active_document,
-                              int(groups['line']),
-                              0,
-                              groups['message'],)
+            err = Message(self.window.get_active_document,
+                          int(groups['line']),
+                          0,
+                          groups['message'],)
             errors.append(err)
             self._results[document].add(err)
 
